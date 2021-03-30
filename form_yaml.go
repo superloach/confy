@@ -25,6 +25,7 @@ func (yf YAMLForm) Marshal(w io.Writer, value interface{}) error {
 	return nil
 }
 
+// Unmarshal decodes the given Reader into the given pointer - in this case, using yaml.NewDecoder.
 func (yf YAMLForm) Unmarshal(r io.Reader, value interface{}) error {
 	err := yaml.NewDecoder(r).Decode(value)
 	if err != nil {
