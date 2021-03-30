@@ -1,44 +1,52 @@
 package confy
 
-import (
-	"fmt"
-	"path/filepath"
-	"strings"
-)
+import "fmt"
 
 // DefaultExt is the default file extension used for Confy files.
 const DefaultExt = ".confy"
 
-// A Confy is a JSON-based configuration directory.
+// A Confy is a stupid simple configuration store.
 type Confy struct {
-	Base string
-	Ext  string
+	Data
+	Form
 }
 
-// Open returns a new Confy with the given base directory.
-func Open(base string) (*Confy, error) {
-	abase, err := filepath.Abs(base)
+// New makes a new Confy with the given Data and Form.
+func New(s Data, f Form) Confy {
+	return Confy{
+		Data: s,
+		Form: f,
+	}
+}
+
+// Load wraps a call to Data.Reader and Form.Unmarshal.
+func (c Confy) Load(key string, ptr interface{}) error {
+	r, err := c.Reader(key)
 	if err != nil {
-		return nil, fmt.Errorf("convert %q to absolute path: %w", base, err)
+		return fmt.Errorf("get reader %q: %w", key, err)
+	}
+	defer r.Close()
+
+	err = c.Unmarshal(r, ptr)
+	if err != nil {
+		return fmt.Errorf("unmarshal ptr: %w", err)
 	}
 
-	return &Confy{
-		Base: abase,
-		Ext:  DefaultExt,
-	}, nil
+	return nil
 }
 
-func (c *Confy) fp(k string) string {
-	return filepath.Join(
-		c.Base,
-		strings.Join(
-			strings.FieldsFunc(
-				strings.ToLower(k), // only lowercase
-				func(r rune) bool {
-					return r < 'a' || r > 'z'
-				}, // delimit on non-alpha
-			), // split into chunks of alpha
-			"_", // rejoin with underscore
-		)+c.Ext, // add the extension
-	) // join onto base
+// Store wraps a call to Data.Writer and Form.Marshal.
+func (c Confy) Store(key string, value interface{}) error {
+	w, err := c.Writer(key)
+	if err != nil {
+		return fmt.Errorf("get writer %q: %w", key, err)
+	}
+	defer w.Close()
+
+	err = c.Marshal(w, value)
+	if err != nil {
+		return fmt.Errorf("marshal %v: %w", value, err)
+	}
+
+	return nil
 }
