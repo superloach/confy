@@ -25,7 +25,7 @@ type DataMem struct {
 }
 
 // NewDataMem creates a usable DataMem.
-func NewDataMem() Data {
+func NewDataMem() DataMem {
 	return DataMem{
 		ma: make(map[string]*memBuffer),
 		mu: &sync.RWMutex{},

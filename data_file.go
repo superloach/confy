@@ -17,10 +17,10 @@ type DataFile struct {
 }
 
 // NewDataFile creates a DataFile with a given base directory and file extension.
-func NewDataFile(base, ext string) (Data, error) {
+func NewDataFile(base, ext string) (DataFile, error) {
 	abase, err := filepath.Abs(base)
 	if err != nil {
-		return nil, fmt.Errorf("abs %q: %w", base, err)
+		return DataFile{}, fmt.Errorf("abs %q: %w", base, err)
 	}
 
 	return DataFile{
@@ -30,10 +30,10 @@ func NewDataFile(base, ext string) (Data, error) {
 }
 
 // ConfigDataFile creates a DataFile with the given app name and file extension.
-func ConfigDataFile(app, ext string) (Data, error) {
+func ConfigDataFile(app, ext string) (DataFile, error) {
 	dir, err := os.UserConfigDir()
 	if err != nil {
-		return nil, fmt.Errorf("get config dir: %w", err)
+		return DataFile{}, fmt.Errorf("get config dir: %w", err)
 	}
 
 	return NewDataFile(filepath.Join(dir, app), ext)
