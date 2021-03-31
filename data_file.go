@@ -10,39 +10,39 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-// FileData is a filesystem-based Data.
-type FileData struct {
+// DataFile is a filesystem-based Data.
+type DataFile struct {
 	Base string
 	Ext  string
 }
 
-// NewFileData creates a FileData with a given base directory and file extension.
-func NewFileData(base, ext string) (Data, error) {
+// NewDataFile creates a DataFile with a given base directory and file extension.
+func NewDataFile(base, ext string) (Data, error) {
 	abase, err := filepath.Abs(base)
 	if err != nil {
 		return nil, fmt.Errorf("abs %q: %w", base, err)
 	}
 
-	return FileData{
+	return DataFile{
 		Base: abase,
 		Ext:  ext,
 	}, nil
 }
 
-// ConfigFileData creates a FileData with the given app name and file extension.
-func ConfigFileData(app, ext string) (Data, error) {
+// ConfigDataFile creates a DataFile with the given app name and file extension.
+func ConfigDataFile(app, ext string) (Data, error) {
 	dir, err := os.UserConfigDir()
 	if err != nil {
 		return nil, fmt.Errorf("get config dir: %w", err)
 	}
 
-	return NewFileData(filepath.Join(dir, app), ext)
+	return NewDataFile(filepath.Join(dir, app), ext)
 }
 
 // fp creates the filepath of a given key, stripping characters as necessary.
-func (fs FileData) fp(key string) string {
+func (d DataFile) fp(key string) string {
 	return filepath.Join(
-		fs.Base,
+		d.Base,
 		strings.Join(
 			strings.FieldsFunc(
 				strings.ToLower(
@@ -53,13 +53,13 @@ func (fs FileData) fp(key string) string {
 				}, // delimit on non-alpha
 			), // split into chunks of alpha
 			"_", // rejoin with underscore
-		)+fs.Ext, // add the extension
+		)+d.Ext, // add the extension
 	) // join onto base
 }
 
 // Reader fetches a ReadCloser for the given key - in this case, using os.Open.
-func (fs FileData) Reader(key string) (io.ReadCloser, error) {
-	fp := fs.fp(key)
+func (d DataFile) Reader(key string) (io.ReadCloser, error) {
+	fp := d.fp(key)
 
 	f, err := os.Open(fp)
 	if err != nil {
@@ -70,8 +70,8 @@ func (fs FileData) Reader(key string) (io.ReadCloser, error) {
 }
 
 // Writer fetches a WriteCloser for the given key - in this case, using os.Create.
-func (fs FileData) Writer(key string) (io.WriteCloser, error) {
-	fp := fs.fp(key)
+func (d DataFile) Writer(key string) (io.WriteCloser, error) {
+	fp := d.fp(key)
 
 	f, err := os.Create(fp)
 	if err != nil {
@@ -82,8 +82,8 @@ func (fs FileData) Writer(key string) (io.WriteCloser, error) {
 }
 
 // Delete removes the given key if it exists - in this case, using os.Remove.
-func (fs FileData) Delete(key string) error {
-	fp := fs.fp(key)
+func (d DataFile) Delete(key string) error {
+	fp := d.fp(key)
 
 	if err := os.Remove(fp); err != nil {
 		return fmt.Errorf("remove %q: %w", fp, err)
@@ -93,22 +93,22 @@ func (fs FileData) Delete(key string) error {
 }
 
 // Keys returns available keys - in this case, using os.ReadDir.
-func (fs FileData) Keys() ([]string, error) {
-	ds, err := os.ReadDir(fs.Base)
+func (d DataFile) Keys() ([]string, error) {
+	dirents, err := os.ReadDir(d.Base)
 	if err != nil {
-		return nil, fmt.Errorf("read dir %q: %w", fs.Base, err)
+		return nil, fmt.Errorf("read dir %q: %w", d.Base, err)
 	}
 
-	ks := make([]string, 0, len(ds))
+	ks := make([]string, 0, len(dirents))
 
-	for _, d := range ds {
-		if !d.Type().IsRegular() {
+	for _, dirent := range dirents {
+		if !dirent.Type().IsRegular() {
 			continue
 		}
 
-		n := d.Name()
-		if strings.HasSuffix(n, fs.Ext) {
-			ks = append(ks, strings.TrimSuffix(n, fs.Ext))
+		n := dirent.Name()
+		if strings.HasSuffix(n, d.Ext) {
+			ks = append(ks, strings.TrimSuffix(n, d.Ext))
 		}
 	}
 

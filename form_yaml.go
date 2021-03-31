@@ -7,8 +7,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// YAMLForm is a YAML-based Form, ideal for readable configuration.
-type YAMLForm struct {
+// FormYAML is a YAML-based Form, ideal for readable configuration.
+type FormYAML struct {
 	// Marshal options
 	Indent int
 
@@ -17,9 +17,9 @@ type YAMLForm struct {
 }
 
 // Marshal encodes the given value into the given Writer - in this case, using yaml.NewEncoder.
-func (yf YAMLForm) Marshal(w io.Writer, value interface{}) error {
+func (f FormYAML) Marshal(w io.Writer, value interface{}) error {
 	e := yaml.NewEncoder(w)
-	e.SetIndent(yf.Indent)
+	e.SetIndent(f.Indent)
 
 	if err := e.Encode(value); err != nil {
 		return fmt.Errorf("yaml encode %v: %w", value, err)
@@ -29,9 +29,9 @@ func (yf YAMLForm) Marshal(w io.Writer, value interface{}) error {
 }
 
 // Unmarshal decodes the given Reader into the given pointer - in this case, using yaml.NewDecoder.
-func (yf YAMLForm) Unmarshal(r io.Reader, value interface{}) error {
+func (f FormYAML) Unmarshal(r io.Reader, value interface{}) error {
 	d := yaml.NewDecoder(r)
-	d.KnownFields(yf.KnownFields)
+	d.KnownFields(f.KnownFields)
 
 	if err := d.Decode(value); err != nil {
 		return fmt.Errorf("json decode: %w", err)

@@ -9,15 +9,15 @@ type Confy struct {
 }
 
 // New makes a new Confy with the given Data and Form.
-func New(s Data, f Form) *Confy {
-	return &Confy{
+func New(s Data, f Form) Confy {
+	return Confy{
 		Data: s,
 		Form: f,
 	}
 }
 
 // Load wraps a call to Data.Reader and Form.Unmarshal.
-func (c *Confy) Load(key string, ptr interface{}) error {
+func (c Confy) Load(key string, ptr interface{}) error {
 	r, err := c.Reader(key)
 	if err != nil {
 		return fmt.Errorf("get reader %q: %w", key, err)
@@ -33,7 +33,7 @@ func (c *Confy) Load(key string, ptr interface{}) error {
 }
 
 // Store wraps a call to Data.Writer and Form.Marshal.
-func (c *Confy) Store(key string, value interface{}) error {
+func (c Confy) Store(key string, value interface{}) error {
 	w, err := c.Writer(key)
 	if err != nil {
 		return fmt.Errorf("get writer %q: %w", key, err)

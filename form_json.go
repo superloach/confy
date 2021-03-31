@@ -6,8 +6,8 @@ import (
 	"io"
 )
 
-// JSONForm is a JSON-based Form, ideal for structured data.
-type JSONForm struct {
+// FormJSON is a JSON-based Form, ideal for structured data.
+type FormJSON struct {
 	// Marshal options
 	EscapeHTML bool
 	Prefix     string
@@ -19,10 +19,10 @@ type JSONForm struct {
 }
 
 // Marshal encodes the given value into the given Writer - in this case, using json.NewEncoder.
-func (jf JSONForm) Marshal(w io.Writer, value interface{}) error {
+func (f FormJSON) Marshal(w io.Writer, value interface{}) error {
 	e := json.NewEncoder(w)
-	e.SetEscapeHTML(jf.EscapeHTML)
-	e.SetIndent(jf.Prefix, jf.Indent)
+	e.SetEscapeHTML(f.EscapeHTML)
+	e.SetIndent(f.Prefix, f.Indent)
 
 	if err := e.Encode(value); err != nil {
 		return fmt.Errorf("json encode %v: %w", value, err)
@@ -32,14 +32,14 @@ func (jf JSONForm) Marshal(w io.Writer, value interface{}) error {
 }
 
 // Unmarshal decodes the given Reader into the given pointer - in this case, using json.NewDecoder.
-func (jf JSONForm) Unmarshal(r io.Reader, value interface{}) error {
+func (f FormJSON) Unmarshal(r io.Reader, value interface{}) error {
 	d := json.NewDecoder(r)
 
-	if jf.DisallowUnknownFields {
+	if f.DisallowUnknownFields {
 		d.DisallowUnknownFields()
 	}
 
-	if jf.UseNumber {
+	if f.UseNumber {
 		d.UseNumber()
 	}
 
