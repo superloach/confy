@@ -1,18 +1,8 @@
 package confy
 
 import (
-	"fmt"
 	"io"
 )
-
-// MustForm can be used to wrap functions that return (Form, error), panicking on error.
-func MustForm(f Form, err error) Form {
-	if err != nil {
-		panic(fmt.Errorf("must: %w", err))
-	}
-
-	return f
-}
 
 // Form describes an object encoding format.
 type Form interface {
