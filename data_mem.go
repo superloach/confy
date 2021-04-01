@@ -52,7 +52,7 @@ func (d DataMem) Writer(key string) (io.WriteCloser, error) {
 	d.mu.RUnlock()
 
 	if !ok {
-		buf := &memBuffer{
+		buf = &memBuffer{
 			Buffer: bytes.Buffer{},
 		}
 
