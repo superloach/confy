@@ -1,75 +1,43 @@
 package confy
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
+	"io"
 	"sync"
 )
 
-var _ Confy = &Mem{}
+var _ Confy = new(Mem)
 
+// Mem is an in-memory Confy that uses a bytes.Buffer.
 type Mem struct {
-	mu sync.RWMutex
-	ma map[string][]byte
+	buf bytes.Buffer
+	mu  sync.Mutex
 }
 
-func NewMem() *Mem {
-	return &Mem{
-		mu: sync.RWMutex{},
-		ma: map[string][]byte{},
-	}
-}
-
-func (m *Mem) Get(key string, ptr interface{}) error {
-	key = NormKey(key)
-
-	m.mu.RLock()
-	bs := m.ma[key]
-	m.mu.RUnlock()
-
-	err := json.Unmarshal(bs, ptr)
-	if err != nil {
-		return fmt.Errorf("json unmarshal %q: %w", bs, err)
-	}
-
-	return nil
-}
-
-func (m *Mem) Set(key string, val interface{}) error {
-	key = NormKey(key)
-
-	bs, err := json.Marshal(val)
-	if err != nil {
-		return fmt.Errorf("json marshal %v: %w", val, err)
-	}
-
+// Load implements Confy using io.ReadAll.
+func (m *Mem) Load() ([]byte, error) {
 	m.mu.Lock()
-	m.ma[key] = bs
-	m.mu.Unlock()
+	defer m.mu.Unlock()
 
-	return nil
-}
-
-func (m *Mem) Del(key string) error {
-	key = NormKey(key)
-
-	m.mu.Lock()
-	delete(m.ma, key)
-	m.mu.Unlock()
-
-	return nil
-}
-
-func (m *Mem) Keys() ([]string, error) {
-	m.mu.RLock()
-
-	ks := make([]string, 0, len(m.ma))
-
-	for k := range m.ma {
-		ks = append(ks, k)
+	data, err := io.ReadAll(&m.buf)
+	if err != nil {
+		return nil, fmt.Errorf("readall: %w", err)
 	}
 
-	m.mu.RUnlock()
+	return data, nil
+}
 
-	return ks, nil
+// Store implements Confy using (*bytes.Buffer).Write.
+func (m *Mem) Store(data []byte) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.buf.Reset()
+
+	if _, err := m.buf.Write(data); err != nil {
+		return fmt.Errorf("write: %w", err)
+	}
+
+	return nil
 }
